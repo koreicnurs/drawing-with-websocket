@@ -1,74 +1,70 @@
-import {useEffect, useRef, useState} from "react";
+import React, {useState, useRef} from 'react';
+
 
 const App = () => {
-    const [messages, setMessages] = useState([]);
-    const [messageText, setMessageText] = useState('');
-    const [userName, setUserName] = useState('');
 
-    const ws = useRef(null);
+    const [state, setState] = useState({
+        mouseDown: false,
+        pixelsArray: []
+    });
 
-    useEffect(() => {
-        ws.current = new WebSocket('ws://localhost:8000/chat');
+    const canvas = useRef(null);
 
-        ws.current.onmessage = event => {
-            const decodedMessage = JSON.parse(event.data);
+    const canvasMouseMoveHandler = event => {
+        if (state.mouseDown) {
+            event.persist();
+            const clientX = event.clientX;
+            const clientY = event.clientY;
+            setState(prevState => {
 
-            if (decodedMessage.type === 'NEW_MESSAGE') {
-                setMessages(prev => [...prev, decodedMessage.message]);
-            }
+                return {
+                    ...prevState,
+                    pixelsArray: [...prevState.pixelsArray, {
+                        x: clientX,
+                        y: clientY
+                    }]
+                };
+            });
 
-            if (decodedMessage.type === 'CONNECTED') {
-                setUserName(decodedMessage.username);
-            }
-        };
-    }, []);
+            const context = canvas.current.getContext('2d');
+            const imageData = context.createImageData(1, 1);
+            const d = imageData.data;
 
-    const sendMessage = () => {
-        ws.current.send(JSON.stringify({
-            type: 'CREATE_MESSAGE',
-            message: messageText,
-        }));
+            d[0] = 0;
+            d[1] = 0;
+            d[2] = 0;
+            d[3] = 255;
+
+            context.putImageData(imageData, event.clientX, event.clientY);
+        }
     };
 
-    const changeUserName = () => {
-        ws.current.send(JSON.stringify({
-            type: 'SET_USERNAME',
-            userName,
-        }))
+
+    const mouseDownHandler = event => {
+
+        setState({...state, mouseDown: true});
+
+    };
+
+
+    const mouseUpHandler = event => {
+        // Где-то здесь отправлять массив пикселей на сервер
+        setState({...state, mouseDown: false, pixelsArray: []});
     };
 
     return (
-        <>
-            <div className="Form">
-                <p>
-                    <input
-                        type="text"
-                        value={userName}
-                        name="userName"
-                        onChange={e => setUserName(e.target.value)}
-                    />
-                </p>
-                <button onClick={changeUserName}>Set username</button>
-                <p>
-                    <input
-                        type="text"
-                        value={messageText}
-                        name="messageText"
-                        onChange={e => setMessageText(e.target.value)}
-                    />
-                </p>
-                <button onClick={sendMessage}>Send message</button>
-            </div>
-
-            <div className="Content">
-                {messages.map((message, idx) => (
-                    <div key={idx}>
-                        <b>{message.username}:</b> {message.text}
-                    </div>
-                ))}
-            </div>
-        </>
-    )
+        <div>
+            <canvas
+                ref={canvas}
+                style={{border: '1px solid black'}}
+                width={800}
+                height={600}
+                onMouseDown={mouseDownHandler}
+                onMouseUp={mouseUpHandler}
+                onMouseMove={canvasMouseMoveHandler}
+            />
+        </div>
+    );
 };
 
 export default App;
