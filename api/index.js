@@ -8,31 +8,36 @@ const port = 8000;
 
 app.use(cors());
 
-const array = [];
+const savePoints = [];
 
 const activeConnections = {};
 
-app.ws('/chat', (ws, req) => {
+app.ws('/draw', (ws, req) => {
     const id = nanoid();
 
     activeConnections[id] = ws;
+
+    ws.send(JSON.stringify({
+        type: 'POINTS',
+        pixelsArray: savePoints,
+    }));
 
     ws.on('close', () => {
         delete activeConnections[id];
     });
 
-
     ws.on('message', msg => {
         const decodedMessage = JSON.parse(msg);
+        savePoints.push(decodedMessage);
+        console.log(savePoints);
 
         switch (decodedMessage.type) {
             case 'DRAW':
                 Object.keys(activeConnections).forEach(connId => {
                     const conn = activeConnections[connId];
-                    console.log(decodedMessage.state.pixelsArray);
 
                     conn.send(JSON.stringify({
-                        type: 'NEW_MESSAGE',
+                        type: 'NEW_DRAW',
                         pixelsArray: decodedMessage.state.pixelsArray
                     }));
                 });

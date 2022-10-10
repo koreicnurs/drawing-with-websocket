@@ -4,24 +4,34 @@ const App = () => {
 
     const [state, setState] = useState({
         mouseDown: false,
-        pixelsArray: []
+        pixelsArray: [],
+        savePixels: []
     });
 
     const canvas = useRef(null);
     const ws = useRef(null);
 
     useEffect(() => {
-        ws.current = new WebSocket('ws://localhost:8000/chat');
+        ws.current = new WebSocket('ws://localhost:8000/draw');
 
         ws.current.onmessage = event => {
             const decodedMessage = JSON.parse(event.data);
-            console.log(decodedMessage);
-            if (decodedMessage.type === 'NEW_MESSAGE') {
+            console.log(decodedMessage.type);
+            if (decodedMessage.type === 'NEW_DRAW') {
                 setState(prevState => {
 
                     return {
                         ...prevState,
                         pixelsArray: decodedMessage.pixelsArray
+                    };
+                });
+            }
+            if (decodedMessage.type === 'POINTS') {
+                setState(prevState => {
+
+                    return {
+                        ...prevState,
+                        savePixels: decodedMessage.pixelsArray
                     };
                 });
             }
@@ -68,6 +78,29 @@ const App = () => {
                     return context.putImageData(imageData, xy.x, xy.y)
                 }
             )
+        }
+
+        if (state.savePixels.length !== 0) {
+            let array = [];
+            state.savePixels.map(pixels => {
+                    return array.push(pixels.state.pixelsArray);
+                }
+            );
+
+            array.map(arrayPoints => {
+                return arrayPoints.map(xy => {
+                    const context = canvas.current.getContext('2d');
+                    const imageData = context.createImageData(1, 1);
+                    const d = imageData.data;
+
+                    d[0] = 0;
+                    d[1] = 0;
+                    d[2] = 0;
+                    d[3] = 255;
+                    return context.putImageData(imageData, xy.x, xy.y)
+                })
+
+            })
         }
     };
 
