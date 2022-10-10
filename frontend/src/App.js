@@ -82,7 +82,7 @@ const App = () => {
             state
         }));
 
-        setState({...state, mouseDown: false});
+        setState({...state, mouseDown: false, pixelsArray: []});
     };
 
     return (
