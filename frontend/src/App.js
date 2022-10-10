@@ -16,7 +16,7 @@ const App = () => {
 
         ws.current.onmessage = event => {
             const decodedMessage = JSON.parse(event.data);
-            console.log(decodedMessage.type);
+
             if (decodedMessage.type === 'NEW_DRAW') {
                 setState(prevState => {
 
@@ -65,6 +65,7 @@ const App = () => {
 
             context.putImageData(imageData, event.clientX, event.clientY);
         }
+
         if (state.pixelsArray.length !== 0) {
             state.pixelsArray.map(xy => {
                     const context = canvas.current.getContext('2d');
@@ -75,13 +76,14 @@ const App = () => {
                     d[1] = 0;
                     d[2] = 0;
                     d[3] = 255;
-                    return context.putImageData(imageData, xy.x, xy.y)
+                    return context.putImageData(imageData, xy.x, xy.y);
                 }
-            )
+            );
         }
 
         if (state.savePixels.length !== 0) {
             let array = [];
+
             state.savePixels.map(pixels => {
                     return array.push(pixels.state.pixelsArray);
                 }
@@ -97,10 +99,9 @@ const App = () => {
                     d[1] = 0;
                     d[2] = 0;
                     d[3] = 255;
-                    return context.putImageData(imageData, xy.x, xy.y)
-                })
-
-            })
+                    return context.putImageData(imageData, xy.x, xy.y);
+                });
+            });
         }
     };
 

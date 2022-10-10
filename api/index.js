@@ -29,7 +29,6 @@ app.ws('/draw', (ws, req) => {
     ws.on('message', msg => {
         const decodedMessage = JSON.parse(msg);
         savePoints.push(decodedMessage);
-        console.log(savePoints);
 
         switch (decodedMessage.type) {
             case 'DRAW':
