@@ -8,18 +8,14 @@ const port = 8000;
 
 app.use(cors());
 
+const array = [];
+
 const activeConnections = {};
 
 app.ws('/chat', (ws, req) => {
     const id = nanoid();
-    let username = 'Anonymous';
 
     activeConnections[id] = ws;
-
-    ws.send(JSON.stringify({
-        type: 'CONNECTED',
-        username
-    }));
 
     ws.on('close', () => {
         delete activeConnections[id];
@@ -30,22 +26,16 @@ app.ws('/chat', (ws, req) => {
         const decodedMessage = JSON.parse(msg);
 
         switch (decodedMessage.type) {
-            case 'SET_USERNAME':
-                username = decodedMessage.userName;
-                break;
-            case 'CREATE_MESSAGE':
+            case 'DRAW':
                 Object.keys(activeConnections).forEach(connId => {
                     const conn = activeConnections[connId];
+                    console.log(decodedMessage.state.pixelsArray);
 
                     conn.send(JSON.stringify({
                         type: 'NEW_MESSAGE',
-                        message: {
-                            username,
-                            text: decodedMessage.message,
-                        },
+                        pixelsArray: decodedMessage.state.pixelsArray
                     }));
                 });
-
                 break;
             default:
                 console.log('Unknown message type:', decodedMessage.type);
